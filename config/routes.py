@@ -1,16 +1,16 @@
-from init import app, db
+from .init import app, db
 from flask import render_template,redirect,url_for
-from models import item,user
-from auth import RegisterForm
+from .models import Item, User
+from .auth import RegisterForm
 
 
 #Registering user.
 @app.route('/register',methods=['GET','POST'])
 def register_page():
-    form= RegisterForm()
+    form = RegisterForm()
 
     if form.validate_on_submit():
-        user=User(
+        user = user(
             username=form.username.data,
             email=form.email.data,
             password_hash=form.password1.data)
