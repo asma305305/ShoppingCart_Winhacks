@@ -1,6 +1,8 @@
 # importing core Flask modules
 from flask import Flask, render_template, url_for, redirect, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
 import os
 import json
 import sys
@@ -14,10 +16,13 @@ with open('config.json') as f:
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
 app.config['SECRET_KEY'] = config['secret_key']
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
 # creating database connection variable
 db = SQLAlchemy()
-from .models import User, Item, Cart, Transaction
+from .models import User, Item, CartItem, Transaction
 
 db.init_app(app)
 
