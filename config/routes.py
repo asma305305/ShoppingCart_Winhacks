@@ -1,29 +1,47 @@
-from .init import app, db
-from flask import render_template,redirect,url_for
-from .models import Item, User
-from .auth import RegisterForm
+from .init import app, db, bcrypt
+from .models import *
+from .authform import *
+from flask import render_template, redirect, url_for
+from flask_login import current_user, login_user, login_required, logout_user
 
-
-#Registering user.
+#Authenticating user
 @app.route('/register',methods=['GET','POST'])
 def register_page():
+    if current_user.is_authenticated:
+        redirect(url_for('home'))
     form = RegisterForm()
 
     if form.validate_on_submit():
-        user = user(
-            username=form.username.data,
-            email=form.email.data,
-            password_hash=form.password1.data)
+        password = bcrypt.generate_password_hash(form.password.data)
+        user = User(
+            name = form.name.data,
+            email = form.email.data,
+            password_hash = password)
         db.session.add(user)
         db.session.commit()
-        return redirect(url_for('market_page'))
-    
-    if form.errors != {}:
-        for i in form.errors.values():
-            print(i)
-    return render_template('register.html',form=form)
+        return redirect(url_for('login'))
+    return render_template('register.html', form = form, title = 'Register')
 
-# home
+@app.route("/login", methods=['GET','POST'])
+def login():
+    if current_user.is_authenticated:
+        redirect(url_for('home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email = form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect(url_for('home'))
+    return render_template('login.html', form = form, title = 'Login')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
+# Routes
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home():
